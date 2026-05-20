@@ -113,7 +113,7 @@ export default function Landing({
               </Link>
             </div>
           </div>
-          <div className="flex shrink-0 items-center justify-center rounded-2xl bg-white p-8 shadow-sm ring-1 ring-brand/10">
+          <div className="flex shrink-0 items-center justify-center">
             <img
               src={logo}
               alt="Eliteforge Peptide"
