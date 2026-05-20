@@ -3,13 +3,18 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Logo palette — off-white surface + navy brand */
+  --color-surface: #f9f9f9;
+  --color-brand: #001b44;
+  --color-brand-muted: #1a3a5c;
+}
+
+html {
+  color-scheme: light;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  @apply bg-surface text-brand antialiased;
 }
