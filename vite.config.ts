@@ -1,9 +1,26 @@
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+/** Chrome DevTools probes this path; not an app route. */
+function ignoreWellKnown(): Plugin {
+  return {
+    name: "ignore-well-known",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.startsWith("/.well-known/")) {
+          res.statusCode = 204;
+          res.end();
+          return;
+        }
+        next();
+      });
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter()],
+  plugins: [ignoreWellKnown(), tailwindcss(), reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },
