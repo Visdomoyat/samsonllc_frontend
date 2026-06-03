@@ -1,13 +1,4 @@
-import { getApiBaseUrl } from "./env";
-
-export type ApiUser = {
-  id: number;
-  username: string;
-};
-
-export type ApiSession =
-  | { authenticated: false }
-  | { authenticated: true; user: ApiUser };
+import { apiUrl } from "./env";
 
 export type Product = {
   id: number;
@@ -29,14 +20,6 @@ export class ApiError extends Error {
   }
 }
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`),
-  );
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
 type ApiRequestInit = RequestInit & {
   request?: Request;
 };
@@ -45,11 +28,6 @@ async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> 
   const { request: incomingRequest, headers: initHeaders, ...rest } = init;
   const headers = new Headers(initHeaders);
 
-  if (rest.method && rest.method !== "GET" && !headers.has("X-CSRFToken")) {
-    const csrf = getCookie("csrftoken");
-    if (csrf) headers.set("X-CSRFToken", csrf);
-  }
-
   if (rest.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -57,7 +35,7 @@ async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> 
   const cookie = incomingRequest?.headers.get("Cookie");
   if (cookie) headers.set("Cookie", cookie);
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...rest,
     headers,
     credentials: "include",
@@ -76,29 +54,6 @@ async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> 
   return data as T;
 }
 
-export function getHealth(request?: Request) {
-  return apiFetch<{ status: string; service: string }>("/api/health/", {
-    request,
-  });
-}
-
-export function getSession(request?: Request) {
-  return apiFetch<ApiSession>("/api/auth/session/", { request });
-}
-
-export function login(username: string, password: string) {
-  return apiFetch<ApiSession>("/api/auth/login/", {
-    method: "POST",
-    body: JSON.stringify({ username, password }),
-  });
-}
-
-export function logout() {
-  return apiFetch<{ authenticated: false }>("/api/auth/logout/", {
-    method: "POST",
-  });
-}
-
 export function getProducts(request?: Request) {
-  return apiFetch<{ products: Product[] }>("/api/products/", { request });
+  return apiFetch<{ products: Product[] }>("/products/", { request });
 }
