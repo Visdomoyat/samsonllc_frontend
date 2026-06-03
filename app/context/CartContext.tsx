@@ -23,6 +23,7 @@ export type CartItem = {
 
 type CartContextValue = {
   items: CartItem[];
+  hydrated: boolean;
   itemCount: number;
   subtotal: number;
   isOpen: boolean;
@@ -144,6 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartContextValue>(
     () => ({
       items,
+      hydrated,
       itemCount,
       subtotal,
       isOpen,
@@ -157,6 +159,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }),
     [
       items,
+      hydrated,
       itemCount,
       subtotal,
       isOpen,
