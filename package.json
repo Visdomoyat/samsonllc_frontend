@@ -9,8 +9,12 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@paypal/paypal-server-sdk": "^1.0.0",
     "@react-router/node": "7.15.1",
     "@react-router/serve": "7.15.1",
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "isbot": "^5.1.36",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
