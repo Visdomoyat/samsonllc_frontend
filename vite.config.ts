@@ -1,6 +1,8 @@
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
+import netlify from "@netlify/vite-plugin-react-router";
+import netlifyReactRouter from "@netlify/vite-plugin-react-router";
 
 /** Chrome DevTools probes this path; not an app route. */
 function ignoreWellKnown(): Plugin {
@@ -20,7 +22,7 @@ function ignoreWellKnown(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [ignoreWellKnown(), tailwindcss(), reactRouter()],
+  plugins: [ignoreWellKnown(), tailwindcss(), reactRouter(), netlifyReactRouter(), netlify()],
   resolve: {
     tsconfigPaths: true,
   },
