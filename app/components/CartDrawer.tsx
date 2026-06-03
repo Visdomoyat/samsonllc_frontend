@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 
+import { Link } from "react-router";
+
 import { useCart } from "~/context/CartContext";
 
 function CloseIcon({ className }: { className?: string }) {
@@ -171,12 +173,13 @@ export default function CartDrawer() {
                   {formatPrice(subtotal)}
                 </span>
               </div>
-              <button
-                type="button"
-                className="mt-4 w-full rounded-lg bg-brand py-3 text-sm font-medium text-white transition hover:bg-brand-muted"
+              <Link
+                to="/checkout"
+                onClick={closeCart}
+                className="mt-4 block w-full rounded-lg bg-brand py-3 text-center text-sm font-medium text-white transition hover:bg-brand-muted"
               >
                 Checkout
-              </button>
+              </Link>
               <button
                 type="button"
                 onClick={clearCart}
