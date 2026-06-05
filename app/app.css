@@ -18,3 +18,28 @@ html,
 body {
   @apply bg-surface text-brand antialiased;
 }
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.hero-float {
+  animation: hero-float 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-float img {
+  filter: drop-shadow(0 20px 28px rgb(0 27 68 / 0.12));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-float {
+    animation: none;
+  }
+}

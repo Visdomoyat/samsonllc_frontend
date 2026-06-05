@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import logo from "~/assets/image/logo.jpeg";
+import landing from "~/assets/image/landing.png";
 import { useCart } from "~/context/CartContext";
 import type { Product } from "~/lib/api";
 
@@ -113,11 +113,11 @@ export default function Landing({
               </Link>
             </div>
           </div>
-          <div className="flex shrink-0 items-center justify-center">
+          <div className="hero-float flex shrink-0 items-center justify-center lg:flex-1 lg:justify-end">
             <img
-              src={logo}
-              alt="Eliteforge Peptide"
-              className="h-auto w-full max-w-xs object-contain sm:max-w-sm"
+              src={landing}
+              alt="Eliteforge peptide vials"
+              className="h-auto w-full max-w-xs object-contain sm:max-w-sm lg:max-w-lg lg:scale-100"
             />
           </div>
         </div>
@@ -199,20 +199,34 @@ export default function Landing({
 
       {/* Bottom CTA */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="rounded-2xl bg-brand px-8 py-12 text-center text-white sm:px-12">
-          <h2 className="text-2xl font-bold sm:text-3xl">
-            Ready to place an order?
-          </h2>
-          <p className="mx-auto mt-4 max-w-lg text-white/80">
-            Browse our full catalog, add items to your cart, and reach out if you
-            have questions about any product.
-          </p>
-          <Link
-            to="/shop"
-            className="mt-8 inline-block rounded-lg bg-white px-8 py-3 text-sm font-semibold text-brand transition hover:bg-surface"
-          >
-            Start shopping
-          </Link>
+        <div className="relative overflow-hidden rounded-2xl bg-brand px-8 py-12 text-center sm:px-12">
+          <img
+            src={landing}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -bottom-4 -left-2 h-28 w-auto object-contain opacity-40 sm:-left-4 sm:h-36 md:h-44 lg:h-52"
+          />
+          <img
+            src={landing}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -bottom-4 -right-2 h-28 w-auto scale-x-[-1] object-contain opacity-40 sm:-right-4 sm:h-36 md:h-44 lg:h-52"
+          />
+          <div className="relative z-10">
+            <h2 className="text-2xl font-bold sm:text-3xl text-center text-white">
+              Ready to place an order?
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-white/80">
+              Browse our full catalog, add items to your cart, and reach out if you
+              have questions about any product.
+            </p>
+            <Link
+              to="/shop"
+              className="mt-8 inline-block rounded-lg bg-white px-8 py-3 text-sm font-semibold text-brand transition hover:bg-surface"
+            >
+              Start shopping
+            </Link>
+          </div>
         </div>
       </section>
     </div>
