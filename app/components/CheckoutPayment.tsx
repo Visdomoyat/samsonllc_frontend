@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import Spinner from "~/components/Spinner";
+import PayPalLogo from "~/components/PayPalLogo";
 import { ApiError } from "~/lib/api";
 import {
   getPaymentConfig,
@@ -112,10 +113,19 @@ export default function CheckoutPayment({ orderId }: { orderId: number }) {
               type="button"
               onClick={handlePayPal}
               disabled={busy}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand/20 bg-[#ffc439] px-6 py-3 text-sm font-semibold text-[#003087] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label="Pay with PayPal"
+              className="inline-flex min-h-12 min-w-[140px] items-center justify-center gap-2 rounded-lg border border-[#cba032] bg-[#ffc439] px-6 py-3 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {paying === "paypal" ? <Spinner /> : null}
-              Pay with PayPal
+              {paying === "paypal" ? (
+                <Spinner />
+              ) : (
+                <>
+                  <span className="text-sm font-medium text-[#2c2e2f]">
+                    Pay with
+                  </span>
+                  <PayPalLogo className="h-5 w-auto" />
+                </>
+              )}
             </button>
           ) : null}
 
