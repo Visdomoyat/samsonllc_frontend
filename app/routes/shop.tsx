@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useLoaderData } from "react-router";
 
-import { ApiError, getProducts, type Product } from "~/lib/api";
-import { useCart } from "~/context/CartContext";
+import landing from "~/assets/image/landing.png";
+import ProductCard from "~/components/ProductCard";
+import { ApiError, getProducts } from "~/lib/api";
 import type { Route } from "./+types/shop";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -36,75 +36,78 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
-
-  function handleAddToCart() {
-    addItem(product);
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1500);
-  }
-
-  return (
-    <li className="flex flex-col overflow-hidden rounded-lg border border-brand/10 bg-white">
-      {product.image_url ? (
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="h-48 w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-48 items-center justify-center bg-surface text-brand/40">
-          No image
-        </div>
-      )}
-      <div className="flex flex-1 flex-col p-4">
-        <h2 className="text-lg font-medium text-brand">{product.name}</h2>
-        <p className="mt-1 line-clamp-3 flex-1 text-sm text-brand/70">
-          {product.description}
-        </p>
-        <p className="mt-3 text-lg font-semibold text-brand">${product.price}</p>
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className={`mt-4 w-full rounded-lg py-2.5 text-sm font-medium transition ${
-            added
-              ? "bg-brand/10 text-brand"
-              : "bg-brand text-white hover:bg-brand-muted"
-          }`}
-        >
-          {added ? "Added to cart" : "Add to cart"}
-        </button>
-      </div>
-    </li>
-  );
-}
-
 export default function Shop() {
   const { products, query, productsError } = useLoaderData<typeof loader>();
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-semibold text-brand">Shop</h1>
-      {query && (
-        <p className="mt-2 text-brand/70">
-          Results for &ldquo;{query}&rdquo;
-        </p>
-      )}
-      {productsError && (
-        <p className="mt-6 text-red-600">{productsError}</p>
-      )}
-      {products && products.length === 0 && (
-        <p className="mt-6 text-brand/70">No products found.</p>
-      )}
-      {products && products.length > 0 && (
-        <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </ul>
-      )}
-    </main>
+    <div className="bg-surface">
+      {/* Shop hero */}
+      <section className="hero-gradient relative overflow-hidden border-b border-brand/10">
+        <img
+          src={landing}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute -right-8 bottom-0 h-48 w-auto object-contain opacity-20 sm:h-56 lg:h-64"
+        />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+          <p className="text-sm font-bold tracking-widest text-accent uppercase">
+            Research catalog
+          </p>
+          <h1 className="mt-2 text-4xl font-bold text-white sm:text-5xl">
+            Shop peptides
+          </h1>
+          <p className="mt-4 max-w-xl text-white/75">
+            Browse our full selection of research-grade peptides. Every product
+            is held to 99% purity standards — for laboratory use only.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["99% Purity", "Research Grade", "Lab Quality", "Tracked Shipping"].map(
+              (badge) => (
+                <span
+                  key={badge}
+                  className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm"
+                >
+                  {badge}
+                </span>
+              ),
+            )}
+          </div>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {query && (
+          <p className="mb-6 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-brand">
+            Showing results for{" "}
+            <span className="font-semibold text-accent">&ldquo;{query}&rdquo;</span>
+          </p>
+        )}
+
+        {productsError && (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
+            {productsError}
+          </p>
+        )}
+
+        {products && products.length === 0 && (
+          <div className="rounded-2xl border border-brand/10 bg-white p-12 text-center">
+            <p className="text-lg font-medium text-brand">No products found.</p>
+            <p className="mt-2 text-brand/60">
+              Try a different search or check back soon for new listings.
+            </p>
+          </div>
+        )}
+
+        {products && products.length > 0 && (
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <li key={product.id}>
+                <ProductCard product={product} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    </div>
   );
 }
