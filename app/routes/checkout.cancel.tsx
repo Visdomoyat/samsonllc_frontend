@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import { CHECKOUT_ORDER_STORAGE_KEY } from "~/lib/checkout";
 
 export function meta() {
-  return [{ title: "Payment cancelled — Eliteforge LLC" }];
+  return [{ title: "Payment cancelled — Eliteforge Peptide" }];
 }
 
 export default function CheckoutCancel() {
@@ -18,7 +18,7 @@ export default function CheckoutCancel() {
   return (
     <main className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
       <p className="text-sm font-semibold uppercase tracking-widest text-brand/60">
-        Eliteforge LLC
+        Eliteforge Peptide
       </p>
       <h1 className="mt-2 text-2xl font-bold text-brand">Payment cancelled</h1>
       <p className="mt-4 text-brand/70">
@@ -30,7 +30,7 @@ export default function CheckoutCancel() {
           to="/"
           className="rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-muted"
         >
-          Return to Eliteforge LLC
+          Return to Eliteforge Peptide
         </Link>
         <Link
           to="/shop"
