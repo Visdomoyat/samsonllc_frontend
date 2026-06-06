@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import CartDrawer from "~/components/CartDrawer";
+import Footer from "~/components/Footer";
 import NavBar from "~/components/NavBar";
 import { CartProvider } from "~/context/CartContext";
 import type { Route } from "./+types/root";
@@ -50,6 +51,7 @@ export default function App() {
       <NavBar />
       <CartDrawer />
       <Outlet />
+      <Footer />
     </CartProvider>
   );
 }

@@ -4,10 +4,14 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
-  /* Logo palette — off-white surface + navy brand */
-  --color-surface: #f9f9f9;
+  --color-surface: #f4f7fb;
   --color-brand: #001b44;
   --color-brand-muted: #1a3a5c;
+  --color-accent: #0ea5e9;
+  --color-accent-teal: #14b8a6;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-emerald: #10b981;
+  --color-vial: #2563eb;
 }
 
 html {
@@ -29,17 +33,74 @@ body {
   }
 }
 
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
 .hero-float {
   animation: hero-float 3.5s ease-in-out infinite;
   will-change: transform;
 }
 
 .hero-float img {
-  filter: drop-shadow(0 20px 28px rgb(0 27 68 / 0.12));
+  filter: drop-shadow(0 24px 40px rgb(37 99 235 / 0.35));
+}
+
+.marquee-track {
+  animation: marquee 28s linear infinite;
+}
+
+.glow-orb {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #38bdf8 0%, #14b8a6 50%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-gradient {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgb(14 165 233 / 0.18), transparent),
+    radial-gradient(ellipse 60% 50% at 90% 10%, rgb(139 92 246 / 0.15), transparent),
+    radial-gradient(ellipse 50% 40% at 70% 80%, rgb(20 184 166 / 0.12), transparent),
+    linear-gradient(160deg, #000814 0%, #001b44 35%, #0c4a6e 70%, #1e1b4b 100%);
+}
+
+.card-shine {
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.95) 0%,
+    rgb(255 255 255 / 0.85) 100%
+  );
+}
+
+.molecule-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgb(0 27 68 / 0.06) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-float {
+  .hero-float,
+  .marquee-track,
+  .glow-orb {
     animation: none;
   }
 }
