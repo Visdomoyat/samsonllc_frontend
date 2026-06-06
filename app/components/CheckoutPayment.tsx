@@ -120,10 +120,10 @@ export default function CheckoutPayment({ orderId }: { orderId: number }) {
                 <Spinner />
               ) : (
                 <>
-                  <span className="text-sm font-medium text-[#2c2e2f]">
-                    Pay with
+                  <PayPalLogo className="h-5 w-5 shrink-0" />
+                  <span className="text-sm font-semibold text-[#2c2e2f]">
+                    Pay with PayPal
                   </span>
-                  <PayPalLogo className="h-5 w-auto" />
                 </>
               )}
             </button>
