@@ -65,7 +65,7 @@ export default function Landing({
   return (
     <div className="bg-surface">
       {/* Hero */}
-      <section className="hero-gradient relative overflow-hidden">
+      <section className="hero-gradient relative overflow-x-hidden">
         <div
           className="glow-orb pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-accent/20 blur-3xl"
           aria-hidden
@@ -131,16 +131,18 @@ export default function Landing({
             </div>
           </div>
 
-          <div className="hero-float relative flex shrink-0 items-center justify-center lg:flex-1 lg:justify-end">
-            <div
-              className="absolute inset-0 rounded-full bg-vial/30 blur-3xl"
-              aria-hidden
-            />
-            <img
-              src={landing}
-              alt="Eliteforge peptide vials — Tesamorelin, BPC-157/TB-500, GHK-Cu"
-              className="relative h-auto w-full max-w-sm object-contain sm:max-w-md lg:max-w-lg"
-            />
+          <div className="hero-float relative shrink-0">
+            <div className="relative aspect-[4/5] w-72 sm:w-80 lg:w-96 xl:w-[28rem]">
+              <div
+                className="absolute inset-0 rounded-full bg-vial/30 blur-3xl"
+                aria-hidden
+              />
+              <img
+                src={landing}
+                alt="Eliteforge peptide vials — Tesamorelin, BPC-157/TB-500, GHK-Cu"
+                className="relative h-full w-full object-contain"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -197,23 +199,28 @@ export default function Landing({
       {/* Packaging showcase */}
       <section className="border-y border-brand/10 bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <img
-              src={packagingBox}
-              alt="Eliteforge branded peptide shipping box"
-              className="h-56 w-full rounded-2xl border border-brand/10 object-cover shadow-lg sm:h-64"
-            />
-             <img
-              src={landing}
-              alt="Eliteforge peptide vials"
-              className="h-56 w-full rounded-2xl border border-brand/10 bg-brand object-contain p-4 shadow-md sm:h-64"
-            />
-            <img
-              src={packaging}
-              alt="Eliteforge research peptide packaging bundles"
-              className="h-56 w-full rounded-2xl border border-brand/10 object-cover shadow-md sm:h-64"
-            />
-           
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-stretch">
+            <div className="h-56 overflow-hidden rounded-2xl border border-brand/10 shadow-lg sm:h-64">
+              <img
+                src={packagingBox}
+                alt="Eliteforge branded peptide shipping box"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="flex h-56 items-center justify-center overflow-hidden rounded-2xl border border-brand/10 bg-brand shadow-md sm:h-64">
+              <img
+                src={landing}
+                alt="Eliteforge peptide vials"
+                className="max-h-full max-w-full object-contain p-2"
+              />
+            </div>
+            <div className="h-56 overflow-hidden rounded-2xl border border-brand/10 shadow-md sm:h-64">
+              <img
+                src={packaging}
+                alt="Eliteforge research peptide packaging bundles"
+                className="h-full w-full object-cover"
+              />
+            </div>
           </div>
 
           <div className="mt-10 sm:mt-12 text-center mx-auto">
