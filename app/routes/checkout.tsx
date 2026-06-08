@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 import CheckoutPayment from "~/components/CheckoutPayment";
@@ -8,6 +8,7 @@ import { ApiError } from "~/lib/api";
 import {
   CHECKOUT_ORDER_STORAGE_KEY,
   createOrder,
+  readCheckoutPaymentLock,
   type CreateOrderPayload,
 } from "~/lib/checkout";
 
@@ -19,11 +20,7 @@ function formatPrice(amount: number) {
 }
 
 function readStoredOrderId(): number | null {
-  if (typeof window === "undefined") return null;
-  const raw = sessionStorage.getItem(CHECKOUT_ORDER_STORAGE_KEY);
-  if (!raw) return null;
-  const id = Number.parseInt(raw, 10);
-  return Number.isFinite(id) ? id : null;
+  return readCheckoutPaymentLock();
 }
 
 export function meta() {
@@ -35,7 +32,9 @@ export default function Checkout() {
   const { items, subtotal, clearCart, hydrated } = useCart();
   const [orderId, setOrderId] = useState<number | null>(readStoredOrderId);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentBusy, setPaymentBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const orderSubmitInFlight = useRef(false);
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -55,6 +54,10 @@ export default function Checkout() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
+
+    if (orderSubmitInFlight.current || submitting) {
+      return;
+    }
 
     if (items.length === 0) {
       setFormError("Your cart is empty.");
@@ -78,6 +81,7 @@ export default function Checkout() {
       })),
     };
 
+    orderSubmitInFlight.current = true;
     setSubmitting(true);
     try {
       const { order } = await createOrder(payload);
@@ -92,6 +96,7 @@ export default function Checkout() {
         err instanceof ApiError ? err.message : "Could not create order",
       );
     } finally {
+      orderSubmitInFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -115,12 +120,20 @@ export default function Checkout() {
 
       {orderId ? (
         <div className="mt-8">
-          <CheckoutPayment orderId={orderId} />
-          <p className="mt-6 text-center text-sm text-brand/60">
-            <Link to="/shop" className="font-medium text-brand hover:underline">
-              Continue shopping
-            </Link>
-          </p>
+          <CheckoutPayment
+            orderId={orderId}
+            onBusyChange={setPaymentBusy}
+          />
+          {!paymentBusy && (
+            <p className="mt-6 text-center text-sm text-brand/60">
+              <Link
+                to="/shop"
+                className="font-medium text-brand hover:underline"
+              >
+                Continue shopping
+              </Link>
+            </p>
+          )}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 space-y-8">

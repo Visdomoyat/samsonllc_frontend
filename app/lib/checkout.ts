@@ -72,9 +72,12 @@ async function parseJson<T>(response: Response): Promise<T> {
   return response.json().catch(() => ({})) as Promise<T>;
 }
 
+const DEFAULT_TIMEOUT_MS = 45_000;
+
 async function publicFetch<T>(
   path: string,
   init: RequestInit = {},
+  timeoutMs = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) {
@@ -82,17 +85,29 @@ async function publicFetch<T>(
   }
 
   const url = apiUrl(path);
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
   let response: Response;
   try {
     response = await fetch(url, {
       ...init,
       headers,
+      signal: controller.signal,
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new ApiError(
+        "The server took too long to respond. Please try again.",
+        0,
+      );
+    }
     throw new ApiError(
       `Cannot reach the API at ${url}. Is Django running on port 8000?`,
       0,
     );
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 
   const text = await response.text();
@@ -137,15 +152,19 @@ export function getOrder(orderId: number) {
 }
 
 export function payWithStripe(orderId: number) {
-  return publicFetch<StripePayResponse>(`/orders/${orderId}/pay/stripe/`, {
-    method: "POST",
-  });
+  return publicFetch<StripePayResponse>(
+    `/orders/${orderId}/pay/stripe/`,
+    { method: "POST" },
+    60_000,
+  );
 }
 
 export function payWithPayPal(orderId: number) {
-  return publicFetch<PayPalPayResponse>(`/orders/${orderId}/pay/paypal/`, {
-    method: "POST",
-  });
+  return publicFetch<PayPalPayResponse>(
+    `/orders/${orderId}/pay/paypal/`,
+    { method: "POST" },
+    60_000,
+  );
 }
 
 export function capturePayPal(orderId: number) {
@@ -155,3 +174,26 @@ export function capturePayPal(orderId: number) {
 }
 
 export const CHECKOUT_ORDER_STORAGE_KEY = "eliteforge-checkout-order-id";
+export const CHECKOUT_PAYMENT_LOCK_KEY = "eliteforge-checkout-payment-lock";
+
+export function setCheckoutPaymentLock(orderId: number) {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(CHECKOUT_ORDER_STORAGE_KEY, String(orderId));
+  localStorage.setItem(CHECKOUT_PAYMENT_LOCK_KEY, String(orderId));
+}
+
+export function clearCheckoutPaymentLock() {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(CHECKOUT_ORDER_STORAGE_KEY);
+  localStorage.removeItem(CHECKOUT_PAYMENT_LOCK_KEY);
+}
+
+export function readCheckoutPaymentLock(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw =
+    localStorage.getItem(CHECKOUT_PAYMENT_LOCK_KEY) ??
+    sessionStorage.getItem(CHECKOUT_ORDER_STORAGE_KEY);
+  if (!raw) return null;
+  const id = Number.parseInt(raw, 10);
+  return Number.isFinite(id) ? id : null;
+}

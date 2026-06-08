@@ -5,7 +5,7 @@ import Spinner from "~/components/Spinner";
 import { ApiError } from "~/lib/api";
 import {
   capturePayPal,
-  CHECKOUT_ORDER_STORAGE_KEY,
+  clearCheckoutPaymentLock,
   getOrder,
   type Order,
 } from "~/lib/checkout";
@@ -76,7 +76,7 @@ export default function CheckoutSuccess() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    sessionStorage.removeItem(CHECKOUT_ORDER_STORAGE_KEY);
+    clearCheckoutPaymentLock();
   }, []);
 
   useEffect(() => {
@@ -90,7 +90,17 @@ export default function CheckoutSuccess() {
 
     async function resolvePayment() {
       try {
-        let { order: current } = await getOrder(orderId);
+        const orderPromise = getOrder(orderId);
+        const timeoutPromise = sleep(15_000).then(() => {
+          throw new ApiError(
+            "The server took too long to confirm your order. Please refresh this page.",
+            0,
+          );
+        });
+        let { order: current } = await Promise.race([
+          orderPromise,
+          timeoutPromise,
+        ]);
         if (cancelled) return;
 
         const markPaid = (o: Order) => {

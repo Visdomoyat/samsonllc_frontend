@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { CHECKOUT_ORDER_STORAGE_KEY } from "~/lib/checkout";
+import { CHECKOUT_PAYMENT_LOCK_KEY } from "~/lib/checkout";
 
 export function meta() {
   return [{ title: "Payment cancelled — Eliteforge Peptide" }];
@@ -12,7 +12,8 @@ export default function CheckoutCancel() {
   const orderId = searchParams.get("order_id");
 
   useEffect(() => {
-    sessionStorage.removeItem(CHECKOUT_ORDER_STORAGE_KEY);
+    // Allow retrying payment for the same order; only release the cross-tab lock.
+    localStorage.removeItem(CHECKOUT_PAYMENT_LOCK_KEY);
   }, []);
 
   return (
@@ -33,10 +34,10 @@ export default function CheckoutCancel() {
           Return to Eliteforge Peptide
         </Link>
         <Link
-          to="/shop"
+          to="/checkout"
           className="rounded-lg border border-brand/20 px-6 py-2.5 text-sm font-semibold text-brand hover:bg-brand/5"
         >
-          Continue shopping
+          Try payment again
         </Link>
       </div>
     </main>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Spinner from "~/components/Spinner";
 import PayPalLogo from "~/components/PayPalLogo";
@@ -7,17 +7,31 @@ import {
   getPaymentConfig,
   payWithPayPal,
   payWithStripe,
+  setCheckoutPaymentLock,
   type PaymentConfig,
 } from "~/lib/checkout";
 
 type PayTarget = "stripe" | "paypal" | null;
 
-export default function CheckoutPayment({ orderId }: { orderId: number }) {
+type CheckoutPaymentProps = {
+  orderId: number;
+  onBusyChange?: (busy: boolean) => void;
+};
+
+export default function CheckoutPayment({
+  orderId,
+  onBusyChange,
+}: CheckoutPaymentProps) {
   const [config, setConfig] = useState<PaymentConfig | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [paying, setPaying] = useState<PayTarget>(null);
+  const payInFlight = useRef(false);
+
+  useEffect(() => {
+    onBusyChange?.(paying !== null);
+  }, [paying, onBusyChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,38 +60,64 @@ export default function CheckoutPayment({ orderId }: { orderId: number }) {
     };
   }, []);
 
-  async function handleStripe() {
+  async function redirectToPayment(
+    provider: PayTarget,
+    fetchUrl: () => Promise<{ checkout_url?: string; approval_url?: string }>,
+  ) {
+    if (payInFlight.current || paying) return;
+
+    payInFlight.current = true;
     setPayError(null);
-    setPaying("stripe");
+    setPaying(provider);
+
     try {
-      const data = await payWithStripe(orderId);
-      window.location.href = data.checkout_url;
+      const data = await fetchUrl();
+      const targetUrl = data.checkout_url ?? data.approval_url;
+
+      if (!targetUrl) {
+        throw new ApiError("Payment provider did not return a checkout URL.", 502);
+      }
+
+      setCheckoutPaymentLock(orderId);
+      window.location.assign(targetUrl);
     } catch (err) {
       setPayError(
-        err instanceof ApiError ? err.message : "Stripe checkout failed",
+        err instanceof ApiError ? err.message : "Payment checkout failed",
       );
       setPaying(null);
+      payInFlight.current = false;
     }
   }
 
-  async function handlePayPal() {
-    setPayError(null);
-    setPaying("paypal");
-    try {
-      const data = await payWithPayPal(orderId);
-      window.location.href = data.approval_url;
-    } catch (err) {
-      setPayError(
-        err instanceof ApiError ? err.message : "PayPal checkout failed",
-      );
-      setPaying(null);
-    }
+  function handleStripe() {
+    return redirectToPayment("stripe", () => payWithStripe(orderId));
+  }
+
+  function handlePayPal() {
+    return redirectToPayment("paypal", () => payWithPayPal(orderId));
   }
 
   const busy = paying !== null;
 
   return (
-    <section className="rounded-xl border border-brand/10 bg-white p-6 shadow-sm">
+    <section className="relative rounded-xl border border-brand/10 bg-white p-6 shadow-sm">
+      {busy && (
+        <div
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-white/90 px-6 text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <Spinner className="h-8 w-8" />
+          <p className="text-sm font-medium text-brand">
+            Redirecting to{" "}
+            {paying === "stripe" ? "card checkout" : "PayPal"}…
+          </p>
+          <p className="text-xs text-brand/60">
+            Please wait — do not close this page or start a new order.
+          </p>
+        </div>
+      )}
+
       <h2 className="text-xl font-semibold text-brand">Choose how to pay</h2>
       <p className="mt-1 text-sm text-brand/70">
         Order #{orderId} is saved. Complete payment to confirm your purchase.
