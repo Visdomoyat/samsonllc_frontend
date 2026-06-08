@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { CHECKOUT_PAYMENT_LOCK_KEY } from "~/lib/checkout";
+import {
+  CHECKOUT_PAYMENT_LOCK_KEY,
+  releasePendingPayments,
+} from "~/lib/checkout";
 
 export function meta() {
   return [{ title: "Payment cancelled — Eliteforge Peptide" }];
@@ -14,7 +17,15 @@ export default function CheckoutCancel() {
   useEffect(() => {
     // Allow retrying payment for the same order; only release the cross-tab lock.
     localStorage.removeItem(CHECKOUT_PAYMENT_LOCK_KEY);
-  }, []);
+
+    if (!orderId) return;
+    const id = Number.parseInt(orderId, 10);
+    if (!Number.isFinite(id)) return;
+
+    releasePendingPayments(id).catch(() => {
+      // Other provider stays blocked until its checkout is released or expires.
+    });
+  }, [orderId]);
 
   return (
     <main className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">

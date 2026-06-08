@@ -42,6 +42,8 @@ export type Order = {
   updated_at?: string;
   shipping_address?: ShippingAddress;
   items?: OrderItem[];
+  stripe_checkout_pending?: boolean;
+  paypal_checkout_pending?: boolean;
 };
 
 export type PaymentConfig = {
@@ -165,6 +167,27 @@ export function payWithPayPal(orderId: number) {
     { method: "POST" },
     60_000,
   );
+}
+
+export function releaseStripeCheckout(orderId: number) {
+  return publicFetch<{ released: boolean; order: Order }>(
+    `/orders/${orderId}/pay/stripe/release/`,
+    { method: "POST" },
+  );
+}
+
+export function releasePayPalCheckout(orderId: number) {
+  return publicFetch<{ released: boolean; order: Order }>(
+    `/orders/${orderId}/pay/paypal/release/`,
+    { method: "POST" },
+  );
+}
+
+export function releasePendingPayments(orderId: number) {
+  return Promise.allSettled([
+    releaseStripeCheckout(orderId),
+    releasePayPalCheckout(orderId),
+  ]);
 }
 
 export function capturePayPal(orderId: number) {

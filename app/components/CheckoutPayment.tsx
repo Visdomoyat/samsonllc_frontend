@@ -4,10 +4,12 @@ import Spinner from "~/components/Spinner";
 import PayPalLogo from "~/components/PayPalLogo";
 import { ApiError } from "~/lib/api";
 import {
+  getOrder,
   getPaymentConfig,
   payWithPayPal,
   payWithStripe,
   setCheckoutPaymentLock,
+  type Order,
   type PaymentConfig,
 } from "~/lib/checkout";
 
@@ -23,11 +25,14 @@ export default function CheckoutPayment({
   onBusyChange,
 }: CheckoutPaymentProps) {
   const [config, setConfig] = useState<PaymentConfig | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [paying, setPaying] = useState<PayTarget>(null);
   const payInFlight = useRef(false);
+  const stripeCheckoutPending = order?.stripe_checkout_pending === true;
+  const paypalCheckoutPending = order?.paypal_checkout_pending === true;
 
   useEffect(() => {
     onBusyChange?.(paying !== null);
@@ -38,9 +43,12 @@ export default function CheckoutPayment({
     setLoadingConfig(true);
     setConfigError(null);
 
-    getPaymentConfig()
-      .then((data) => {
-        if (!cancelled) setConfig(data);
+    Promise.all([getPaymentConfig(), getOrder(orderId)])
+      .then(([paymentConfig, orderResponse]) => {
+        if (!cancelled) {
+          setConfig(paymentConfig);
+          setOrder(orderResponse.order);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -58,7 +66,7 @@ export default function CheckoutPayment({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [orderId]);
 
   async function redirectToPayment(
     provider: PayTarget,
@@ -140,7 +148,12 @@ export default function CheckoutPayment({
             <button
               type="button"
               onClick={handleStripe}
-              disabled={busy}
+              disabled={busy || paypalCheckoutPending}
+              title={
+                paypalCheckoutPending
+                  ? "Complete or cancel PayPal checkout before using card payment"
+                  : undefined
+              }
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
               {paying === "stripe" ? <Spinner className="text-white" /> : null}
@@ -152,8 +165,13 @@ export default function CheckoutPayment({
             <button
               type="button"
               onClick={handlePayPal}
-              disabled={busy}
+              disabled={busy || stripeCheckoutPending}
               aria-label="Pay with PayPal"
+              title={
+                stripeCheckoutPending
+                  ? "Complete or cancel card checkout before using PayPal"
+                  : undefined
+              }
               className="inline-flex min-h-12 min-w-[140px] items-center justify-center gap-2 rounded-lg border border-[#cba032] bg-[#ffc439] px-6 py-3 transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {paying === "paypal" ? (
@@ -173,6 +191,20 @@ export default function CheckoutPayment({
             <p className="text-sm text-brand/70">Payments not configured</p>
           )}
         </div>
+      )}
+
+      {stripeCheckoutPending && (
+        <p className="mt-4 text-sm text-brand/70">
+          Card checkout is in progress for this order. Finish paying with your
+          card, or cancel that checkout, before using PayPal.
+        </p>
+      )}
+
+      {paypalCheckoutPending && (
+        <p className="mt-4 text-sm text-brand/70">
+          PayPal checkout is in progress for this order. Finish paying with
+          PayPal, or cancel that checkout, before using your card.
+        </p>
       )}
 
       {payError && (
