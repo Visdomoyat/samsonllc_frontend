@@ -57,3 +57,39 @@ async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> 
 export function getProducts(request?: Request) {
   return apiFetch<{ products: Product[] }>("/products/", { request });
 }
+
+export type BundleTier = {
+  quantity: number;
+  discount_percent: number | null;
+  line_total: string;
+  label: string;
+};
+
+export type StackBlend = {
+  id: number;
+  name: string;
+  kind: "stack" | "blend";
+  kind_label: string;
+  description: string;
+  price: string;
+  image_url: string | null;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+  bundle_tiers?: BundleTier[];
+};
+
+export function getStackBlends(request?: Request, landing = false) {
+  const query = landing ? "?landing=1" : "";
+  return apiFetch<{ stack_blends: StackBlend[] }>(
+    `/stack-blends${query}`,
+    { request },
+  );
+}
+
+export function getStackBlend(id: number, request?: Request) {
+  return apiFetch<{ stack_blend: StackBlend }>(`/stack-blends/${id}/`, {
+    request,
+  });
+}

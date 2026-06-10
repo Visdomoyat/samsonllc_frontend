@@ -11,6 +11,7 @@ import {
   readCheckoutPaymentLock,
   type CreateOrderPayload,
 } from "~/lib/checkout";
+import { cartLineTotal } from "~/lib/cartItem";
 
 function formatPrice(amount: number) {
   return amount.toLocaleString("en-US", {
@@ -75,10 +76,11 @@ export default function Checkout() {
         postal_code: postalCode.trim(),
         country: country.trim() || "US",
       },
-      items: items.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-      })),
+      items: items.map((item) =>
+        item.itemType === "stack_blend"
+          ? { stack_blend_id: item.id, quantity: item.quantity }
+          : { product_id: item.id, quantity: item.quantity },
+      ),
     };
 
     orderSubmitInFlight.current = true;
@@ -151,9 +153,7 @@ export default function Checkout() {
                   </span>
                   <span className="shrink-0 font-medium text-brand">
                     $
-                    {(
-                      Number.parseFloat(item.price) * item.quantity
-                    ).toFixed(2)}
+                    {cartLineTotal(item).toFixed(2)}
                   </span>
                 </li>
               ))}

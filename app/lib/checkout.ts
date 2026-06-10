@@ -14,7 +14,10 @@ export type CreateOrderPayload = {
   customer_name: string;
   customer_email: string;
   shipping_address: ShippingAddress;
-  items: { product_id: number; quantity: number }[];
+  items: Array<
+    | { product_id: number; quantity: number }
+    | { stack_blend_id: number; quantity: number }
+  >;
 };
 
 export type OrderItem = {
