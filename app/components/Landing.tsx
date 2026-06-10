@@ -269,44 +269,6 @@ export default function Landing({
         </div>
       </section>
 
-      {/* Ready-made stacks & blends */}
-      <section className="border-t border-brand/10 bg-white py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <h1 className="text-3xl font-bold text-brand sm:text-4xl">
-            Ready made stacks and blends
-          </h1>
-          <p className="mt-3 max-w-2xl text-brand/70">
-            Curated combinations with bundle pricing — shop a stack or blend and
-            save when you buy more.
-          </p>
-
-          {stackBlendsError && (
-            <p className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
-              {stackBlendsError}
-            </p>
-          )}
-
-          {!stackBlendsError && stackBlends.length === 0 && (
-            <p className="mt-8 rounded-2xl border border-brand/10 bg-surface p-10 text-center text-brand/70">
-              New stacks and blends coming soon.
-            </p>
-          )}
-
-          {stackBlends.length > 0 && (
-            <ul className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {stackBlends.map((item, index) => (
-                <li key={item.id}>
-                  <StackBlendTile
-                    item={item}
-                    tilt={index % 2 === 0 ? "right" : "left"}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
       {/* Featured products */}
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -358,6 +320,45 @@ export default function Landing({
           )}
         </div>
       </section>
+
+       {/* Ready-made stacks & blends */}
+       <section className="border-t border-brand/10 bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <h1 className="text-3xl font-bold text-brand sm:text-4xl text-center">
+            Ready Made Stacks and Blends
+          </h1>
+          <p className="mt-3 max-w-2xl text-brand/70">
+            Curated combinations with bundle pricing — shop a stack or blend and
+            save when you buy more.
+          </p>
+
+          {stackBlendsError && (
+            <p className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
+              {stackBlendsError}
+            </p>
+          )}
+
+          {!stackBlendsError && stackBlends.length === 0 && (
+            <p className="mt-8 rounded-2xl border border-brand/10 bg-surface p-10 text-center text-brand/70">
+              New stacks and blends coming soon.
+            </p>
+          )}
+
+          {stackBlends.length > 0 && (
+            <ul className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {stackBlends.map((item, index) => (
+                <li key={item.id}>
+                  <StackBlendTile
+                    item={item}
+                    tilt={index % 2 === 0 ? "right" : "left"}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
 
       {/* Bottom CTA */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
