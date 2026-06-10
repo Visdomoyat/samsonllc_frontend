@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/context/CartContext";
+import { cartItemKey, cartLineTotal } from "~/lib/cartItem";
+import { formatUsd } from "~/lib/stackBlendPricing";
 
 function CloseIcon({ className }: { className?: string }) {
   return (
@@ -105,7 +107,7 @@ export default function CartDrawer() {
             <ul className="flex-1 overflow-y-auto px-5 py-4">
               {items.map((item) => (
                 <li
-                  key={item.id}
+                  key={cartItemKey(item)}
                   className="flex gap-3 border-b border-brand/10 py-4 last:border-b-0"
                 >
                   {item.image_url ? (
@@ -121,19 +123,28 @@ export default function CartDrawer() {
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-brand">{item.name}</h3>
+                    {item.itemType === "stack_blend" && (
+                      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-accent">
+                        Stack / blend
+                      </p>
+                    )}
                     {item.description && (
                       <p className="mt-1 line-clamp-3 text-sm text-brand/70">
                         {item.description}
                       </p>
                     )}
                     <p className="mt-2 text-sm font-semibold text-brand">
-                      ${item.price}
+                      {formatUsd(cartLineTotal(item))}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
+                          updateQuantity(
+                            item.itemType,
+                            item.id,
+                            item.quantity - 1,
+                          )
                         }
                         className="flex h-8 w-8 items-center justify-center rounded-md border border-brand/15 bg-white text-brand transition hover:bg-brand/5"
                         aria-label={`Decrease quantity of ${item.name}`}
@@ -146,7 +157,11 @@ export default function CartDrawer() {
                       <button
                         type="button"
                         onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
+                          updateQuantity(
+                            item.itemType,
+                            item.id,
+                            item.quantity + 1,
+                          )
                         }
                         className="flex h-8 w-8 items-center justify-center rounded-md border border-brand/15 bg-white text-brand transition hover:bg-brand/5"
                         aria-label={`Increase quantity of ${item.name}`}
@@ -155,7 +170,7 @@ export default function CartDrawer() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item.itemType, item.id)}
                         className="ml-auto text-sm text-brand/50 transition hover:text-red-600"
                       >
                         Remove

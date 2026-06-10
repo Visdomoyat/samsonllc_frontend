@@ -8,11 +8,15 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Product } from "~/lib/api";
+import type { Product, StackBlend } from "~/lib/api";
+import { cartItemKey, cartLineTotal } from "~/lib/cartItem";
 
 const STORAGE_KEY = "eliteforge-cart";
 
+export type CartItemType = "product" | "stack_blend";
+
 export type CartItem = {
+  itemType: CartItemType;
   id: number;
   name: string;
   description: string;
@@ -31,8 +35,9 @@ type CartContextValue = {
   closeCart: () => void;
   toggleCart: () => void;
   addItem: (product: Product) => void;
-  removeItem: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  addStackBlendItem: (stackBlend: StackBlend, quantity: number) => void;
+  removeItem: (itemType: CartItemType, id: number) => void;
+  updateQuantity: (itemType: CartItemType, id: number, quantity: number) => void;
   clearCart: () => void;
 };
 
@@ -46,6 +51,7 @@ function parseStoredCart(raw: string | null): CartItem[] {
     return parsed
       .filter(
         (item) =>
+          (item.itemType === "product" || item.itemType === "stack_blend") &&
           typeof item.id === "number" &&
           typeof item.name === "string" &&
           typeof item.price === "string" &&
@@ -54,17 +60,13 @@ function parseStoredCart(raw: string | null): CartItem[] {
       )
       .map((item) => ({
         ...item,
+        itemType: item.itemType ?? "product",
         description:
           typeof item.description === "string" ? item.description : "",
       }));
   } catch {
     return [];
   }
-}
-
-function lineTotal(price: string, quantity: number): number {
-  const unit = Number.parseFloat(price);
-  return Number.isFinite(unit) ? unit * quantity : 0;
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -92,10 +94,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((product: Product) => {
     setItems((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const key = cartItemKey({ itemType: "product", id: product.id });
+      const existing = current.find((item) => cartItemKey(item) === key);
       if (existing) {
         return current.map((item) =>
-          item.id === product.id
+          cartItemKey(item) === key
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
@@ -103,6 +106,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [
         ...current,
         {
+          itemType: "product",
           id: product.id,
           name: product.name,
           description: product.description,
@@ -114,21 +118,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((id: number) => {
-    setItems((current) => current.filter((item) => item.id !== id));
+  const addStackBlendItem = useCallback(
+    (stackBlend: StackBlend, quantity: number) => {
+      const qty = Math.max(1, quantity);
+      setItems((current) => {
+        const key = cartItemKey({ itemType: "stack_blend", id: stackBlend.id });
+        const existing = current.find((item) => cartItemKey(item) === key);
+        if (existing) {
+          return current.map((item) =>
+            cartItemKey(item) === key ? { ...item, quantity: qty } : item,
+          );
+        }
+        return [
+          ...current,
+          {
+            itemType: "stack_blend",
+            id: stackBlend.id,
+            name: stackBlend.name,
+            description: stackBlend.description,
+            price: stackBlend.price,
+            image_url: stackBlend.image_url,
+            quantity: qty,
+          },
+        ];
+      });
+    },
+    [],
+  );
+
+  const removeItem = useCallback((itemType: CartItemType, id: number) => {
+    const key = cartItemKey({ itemType, id });
+    setItems((current) => current.filter((item) => cartItemKey(item) !== key));
   }, []);
 
-  const updateQuantity = useCallback((id: number, quantity: number) => {
-    if (quantity < 1) {
-      setItems((current) => current.filter((item) => item.id !== id));
-      return;
-    }
-    setItems((current) =>
-      current.map((item) =>
-        item.id === id ? { ...item, quantity } : item,
-      ),
-    );
-  }, []);
+  const updateQuantity = useCallback(
+    (itemType: CartItemType, id: number, quantity: number) => {
+      const key = cartItemKey({ itemType, id });
+      if (quantity < 1) {
+        setItems((current) =>
+          current.filter((item) => cartItemKey(item) !== key),
+        );
+        return;
+      }
+      setItems((current) =>
+        current.map((item) =>
+          cartItemKey(item) === key ? { ...item, quantity } : item,
+        ),
+      );
+    },
+    [],
+  );
 
   const clearCart = useCallback(() => setItems([]), []);
 
@@ -138,7 +177,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + lineTotal(item.price, item.quantity), 0),
+    () => items.reduce((sum, item) => sum + cartLineTotal(item), 0),
     [items],
   );
 
@@ -153,6 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeCart: () => setIsOpen(false),
       toggleCart: () => setIsOpen((open) => !open),
       addItem,
+      addStackBlendItem,
       removeItem,
       updateQuantity,
       clearCart,
@@ -164,6 +204,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotal,
       isOpen,
       addItem,
+      addStackBlendItem,
       removeItem,
       updateQuantity,
       clearCart,
