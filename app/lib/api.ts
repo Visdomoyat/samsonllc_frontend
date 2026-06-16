@@ -21,6 +21,49 @@ export type Product = {
   updated_at: string;
 };
 
+export function formatProductPrice(price: string): string {
+  const amount = Number.parseFloat(price);
+  if (!Number.isFinite(amount)) return price;
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function normalizeVariant(raw: ProductVariant): ProductVariant {
+  return {
+    ...raw,
+    is_active: Boolean(raw.is_active),
+  };
+}
+
+export function normalizeProduct(raw: Product & { price?: string }): Product {
+  const variants = Array.isArray(raw.variants)
+    ? raw.variants.map(normalizeVariant).filter((variant) => variant.is_active)
+    : [];
+
+  let priceFrom = raw.price_from ?? null;
+  if (!priceFrom && variants.length > 0) {
+    const prices = variants
+      .map((variant) => Number.parseFloat(variant.price))
+      .filter((value) => Number.isFinite(value));
+    if (prices.length > 0) {
+      priceFrom = Math.min(...prices).toFixed(2);
+    }
+  }
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    description: raw.description,
+    image_url: raw.image_url,
+    variants,
+    price_from: priceFrom,
+    created_at: raw.created_at,
+    updated_at: raw.updated_at,
+  };
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -65,8 +108,14 @@ async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> 
   return data as T;
 }
 
-export function getProducts(request?: Request) {
-  return apiFetch<{ products: Product[] }>("/products/", { request });
+export async function getProducts(request?: Request) {
+  const data = await apiFetch<{ products: (Product & { price?: string })[] }>(
+    "/products/",
+    { request },
+  );
+  return {
+    products: data.products.map(normalizeProduct),
+  };
 }
 
 export type BundleTier = {

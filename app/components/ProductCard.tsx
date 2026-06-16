@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/context/CartContext";
-import type { Product, ProductVariant } from "~/lib/api";
+import {
+  formatProductPrice,
+  type Product,
+  type ProductVariant,
+} from "~/lib/api";
 
 type ProductCardProps = {
   product: Product;
@@ -29,13 +33,26 @@ export default function ProductCard({
 }: ProductCardProps) {
   const { addItem } = useCart();
   const variants = useMemo(
-    () => sortVariants(product.variants.filter((variant) => variant.is_active)),
+    () => sortVariants(product.variants ?? []),
     [product.variants],
   );
-  const [selectedVariantId, setSelectedVariantId] = useState(
-    () => variants[0]?.id ?? null,
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
+    null,
   );
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (variants.length === 0) {
+      setSelectedVariantId(null);
+      return;
+    }
+    if (
+      selectedVariantId === null ||
+      !variants.some((variant) => variant.id === selectedVariantId)
+    ) {
+      setSelectedVariantId(variants[0].id);
+    }
+  }, [variants, selectedVariantId]);
 
   const selectedVariant =
     variants.find((variant) => variant.id === selectedVariantId) ?? variants[0];
@@ -48,9 +65,9 @@ export default function ProductCard({
   }
 
   const priceLabel = selectedVariant
-    ? `$${selectedVariant.price}`
+    ? `$${formatProductPrice(selectedVariant.price)}`
     : product.price_from
-      ? `From $${product.price_from}`
+      ? `From $${formatProductPrice(product.price_from)}`
       : "—";
 
   return (
@@ -79,42 +96,72 @@ export default function ProductCard({
         <h3 className="font-semibold text-brand group-hover:text-accent transition-colors">
           {product.name}
         </h3>
-        <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-brand/70">
+        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-brand/70">
           {product.description}
         </p>
 
         {variants.length > 0 ? (
-          <div className="mt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand/50">
-              Select size
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {variants.map((variant) => {
-                const selected = variant.id === selectedVariant?.id;
-                return (
-                  <button
+          <>
+            <div className="mt-4 rounded-xl border border-brand/10 bg-brand/[0.03] p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand/50">
+                Sizes &amp; prices
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {variants.map((variant) => (
+                  <li
                     key={variant.id}
-                    type="button"
-                    onClick={() => setSelectedVariantId(variant.id)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                      selected
-                        ? "border-brand bg-brand text-white"
-                        : "border-brand/15 bg-white text-brand hover:border-accent/40"
-                    }`}
+                    className="flex items-center justify-between gap-3 text-sm"
                   >
-                    {variant.size_label}
-                  </button>
-                );
-              })}
+                    <span className="font-medium text-brand">
+                      {variant.size_label}
+                    </span>
+                    <span className="font-semibold text-brand">
+                      ${formatProductPrice(variant.price)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand/50">
+                Select size
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {variants.map((variant) => {
+                  const selected = variant.id === selectedVariant?.id;
+                  return (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={() => setSelectedVariantId(variant.id)}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm font-medium transition ${
+                        selected
+                          ? "border-brand bg-brand text-white"
+                          : "border-brand/15 bg-white text-brand hover:border-accent/40"
+                      }`}
+                    >
+                      <span className="block">{variant.size_label}</span>
+                      <span
+                        className={`block text-xs ${
+                          selected ? "text-white/85" : "text-brand/60"
+                        }`}
+                      >
+                        ${formatProductPrice(variant.price)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         ) : (
           <p className="mt-4 text-sm text-brand/50">No sizes available</p>
         )}
 
         <p className="mt-3 text-xl font-bold text-brand">{priceLabel}</p>
 
-        <div className={`mt-4 flex gap-2 ${showShopLink ? "" : ""}`}>
+        <div className="mt-4 flex gap-2">
           <button
             type="button"
             onClick={handleAddToCart}
