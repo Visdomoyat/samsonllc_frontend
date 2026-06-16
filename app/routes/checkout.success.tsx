@@ -12,7 +12,19 @@ import {
 } from "~/lib/checkout";
 
 const POLL_INTERVAL_MS = 2000;
-const POLL_MAX_MS = 30_000;
+const POLL_MAX_MS = 60_000;
+
+async function tryConfirmStripe(orderId: number, sessionId?: string | null) {
+  try {
+    const confirmed = await confirmStripeCheckout(
+      orderId,
+      sessionId?.trim() || undefined,
+    );
+    return confirmed.order;
+  } catch {
+    return null;
+  }
+}
 
 function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -115,21 +127,21 @@ export default function CheckoutSuccess() {
           return;
         }
 
-        if (sessionId && current.status === "pending") {
-          try {
-            const confirmed = await confirmStripeCheckout(orderId, sessionId);
-            current = confirmed.order;
+        const likelyStripe =
+          Boolean(sessionId) || current.payment_provider === "stripe";
+        if (likelyStripe && current.status === "pending") {
+          const confirmed = await tryConfirmStripe(orderId, sessionId);
+          if (confirmed) {
+            current = confirmed;
             if (cancelled) return;
             if (current.is_paid || current.status === "paid") {
               markPaid(current);
               return;
             }
-          } catch {
-            // Webhook may still complete
           }
         }
 
-        const likelyPayPal = !sessionId || current.payment_provider === "paypal";
+        const likelyPayPal = current.payment_provider === "paypal";
         if (likelyPayPal && current.status === "pending") {
           try {
             const captured = await capturePayPal(orderId);
@@ -149,8 +161,28 @@ export default function CheckoutSuccess() {
         setMessage("Processing payment…");
 
         const startedAt = Date.now();
+        let pollCount = 0;
         while (Date.now() - startedAt < POLL_MAX_MS && !cancelled) {
           await sleep(POLL_INTERVAL_MS);
+          pollCount += 1;
+
+          if (
+            likelyStripe &&
+            current.status === "pending" &&
+            pollCount % 3 === 0
+          ) {
+            const confirmed = await tryConfirmStripe(orderId, sessionId);
+            if (confirmed) {
+              current = confirmed;
+              if (cancelled) return;
+              setOrder(current);
+              if (current.is_paid || current.status === "paid") {
+                markPaid(current);
+                return;
+              }
+            }
+          }
+
           const refreshed = await getOrder(orderId);
           current = refreshed.order;
           if (cancelled) return;
