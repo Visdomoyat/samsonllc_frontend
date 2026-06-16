@@ -193,6 +193,16 @@ export function releasePendingPayments(orderId: number) {
   ]);
 }
 
+export function confirmStripeCheckout(orderId: number, sessionId?: string) {
+  return publicFetch<{ order: Order }>(
+    `/orders/${orderId}/stripe/confirm/`,
+    {
+      method: "POST",
+      body: JSON.stringify(sessionId ? { session_id: sessionId } : {}),
+    },
+  );
+}
+
 export function capturePayPal(orderId: number) {
   return publicFetch<{ order: Order }>(`/orders/${orderId}/paypal/capture/`, {
     method: "POST",

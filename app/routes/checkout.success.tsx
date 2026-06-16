@@ -6,6 +6,7 @@ import { ApiError } from "~/lib/api";
 import {
   capturePayPal,
   clearCheckoutPaymentLock,
+  confirmStripeCheckout,
   getOrder,
   type Order,
 } from "~/lib/checkout";
@@ -112,6 +113,20 @@ export default function CheckoutSuccess() {
         if (current.is_paid || current.status === "paid") {
           markPaid(current);
           return;
+        }
+
+        if (sessionId && current.status === "pending") {
+          try {
+            const confirmed = await confirmStripeCheckout(orderId, sessionId);
+            current = confirmed.order;
+            if (cancelled) return;
+            if (current.is_paid || current.status === "paid") {
+              markPaid(current);
+              return;
+            }
+          } catch {
+            // Webhook may still complete
+          }
         }
 
         const likelyPayPal = !sessionId || current.payment_provider === "paypal";
