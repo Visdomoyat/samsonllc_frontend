@@ -123,6 +123,11 @@ export default function CartDrawer() {
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-brand">{item.name}</h3>
+                    {item.sizeLabel && (
+                      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-accent">
+                        {item.sizeLabel}
+                      </p>
+                    )}
                     {item.itemType === "stack_blend" && (
                       <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-accent">
                         Stack / blend
@@ -141,8 +146,11 @@ export default function CartDrawer() {
                         type="button"
                         onClick={() =>
                           updateQuantity(
-                            item.itemType,
-                            item.id,
+                            {
+                              itemType: item.itemType,
+                              id: item.id,
+                              variantId: item.variantId,
+                            },
                             item.quantity - 1,
                           )
                         }
@@ -158,8 +166,11 @@ export default function CartDrawer() {
                         type="button"
                         onClick={() =>
                           updateQuantity(
-                            item.itemType,
-                            item.id,
+                            {
+                              itemType: item.itemType,
+                              id: item.id,
+                              variantId: item.variantId,
+                            },
                             item.quantity + 1,
                           )
                         }
@@ -170,7 +181,13 @@ export default function CartDrawer() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.itemType, item.id)}
+                        onClick={() =>
+                          removeItem({
+                            itemType: item.itemType,
+                            id: item.id,
+                            variantId: item.variantId,
+                          })
+                        }
                         className="ml-auto text-sm text-brand/50 transition hover:text-red-600"
                       >
                         Remove

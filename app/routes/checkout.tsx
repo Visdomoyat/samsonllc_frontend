@@ -11,7 +11,7 @@ import {
   readCheckoutPaymentLock,
   type CreateOrderPayload,
 } from "~/lib/checkout";
-import { cartLineTotal } from "~/lib/cartItem";
+import { cartItemKey, cartLineTotal } from "~/lib/cartItem";
 
 function formatPrice(amount: number) {
   return amount.toLocaleString("en-US", {
@@ -79,7 +79,10 @@ export default function Checkout() {
       items: items.map((item) =>
         item.itemType === "stack_blend"
           ? { stack_blend_id: item.id, quantity: item.quantity }
-          : { product_id: item.id, quantity: item.quantity },
+          : {
+              product_variant_id: item.variantId!,
+              quantity: item.quantity,
+            },
       ),
     };
 
@@ -144,16 +147,30 @@ export default function Checkout() {
             <ul className="mt-4 divide-y divide-brand/10">
               {items.map((item) => (
                 <li
-                  key={item.id}
+                  key={cartItemKey(item)}
                   className="flex justify-between gap-4 py-3 text-sm"
                 >
-                  <span className="text-brand">
-                    {item.name}{" "}
-                    <span className="text-brand/60">× {item.quantity}</span>
-                  </span>
+                  <div className="min-w-0 text-left">
+                    <p className="font-medium text-brand">
+                      {item.name}
+                      <span className="font-normal text-brand/60">
+                        {" "}
+                        × {item.quantity}
+                      </span>
+                    </p>
+                    {item.sizeLabel && (
+                      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-accent">
+                        {item.sizeLabel}
+                      </p>
+                    )}
+                    {item.description && (
+                      <p className="mt-1 line-clamp-2 text-brand/70">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
                   <span className="shrink-0 font-medium text-brand">
-                    $
-                    {cartLineTotal(item).toFixed(2)}
+                    ${cartLineTotal(item).toFixed(2)}
                   </span>
                 </li>
               ))}

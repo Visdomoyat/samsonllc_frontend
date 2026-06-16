@@ -1,11 +1,22 @@
 import { apiUrl } from "./env";
 
+export type ProductVariant = {
+  id: number;
+  size_value: string;
+  size_unit: "mg" | "ml";
+  size_label: string;
+  price: string;
+  is_active: boolean;
+  display_order: number;
+};
+
 export type Product = {
   id: number;
   name: string;
   description: string;
-  price: string;
   image_url: string | null;
+  variants: ProductVariant[];
+  price_from: string | null;
   created_at: string;
   updated_at: string;
 };

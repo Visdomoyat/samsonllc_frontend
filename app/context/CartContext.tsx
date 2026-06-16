@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Product, StackBlend } from "~/lib/api";
+import type { Product, ProductVariant, StackBlend } from "~/lib/api";
 import { cartItemKey, cartLineTotal } from "~/lib/cartItem";
 
 const STORAGE_KEY = "eliteforge-cart";
@@ -18,12 +18,16 @@ export type CartItemType = "product" | "stack_blend";
 export type CartItem = {
   itemType: CartItemType;
   id: number;
+  variantId?: number;
   name: string;
   description: string;
+  sizeLabel?: string;
   price: string;
   image_url: string | null;
   quantity: number;
 };
+
+type CartLineRef = Pick<CartItem, "itemType" | "id" | "variantId">;
 
 type CartContextValue = {
   items: CartItem[];
@@ -34,10 +38,10 @@ type CartContextValue = {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  addItem: (product: Product) => void;
+  addItem: (product: Product, variant: ProductVariant) => void;
   addStackBlendItem: (stackBlend: StackBlend, quantity: number) => void;
-  removeItem: (itemType: CartItemType, id: number) => void;
-  updateQuantity: (itemType: CartItemType, id: number, quantity: number) => void;
+  removeItem: (item: CartLineRef) => void;
+  updateQuantity: (item: CartLineRef, quantity: number) => void;
   clearCart: () => void;
 };
 
@@ -49,20 +53,33 @@ function parseStoredCart(raw: string | null): CartItem[] {
     const parsed = JSON.parse(raw) as CartItem[];
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter(
-        (item) =>
-          (item.itemType === "product" || item.itemType === "stack_blend") &&
+      .filter((item) => {
+        if (item.itemType === "stack_blend") {
+          return (
+            typeof item.id === "number" &&
+            typeof item.name === "string" &&
+            typeof item.price === "string" &&
+            typeof item.quantity === "number" &&
+            item.quantity > 0
+          );
+        }
+        return (
+          item.itemType === "product" &&
           typeof item.id === "number" &&
+          typeof item.variantId === "number" &&
           typeof item.name === "string" &&
           typeof item.price === "string" &&
           typeof item.quantity === "number" &&
-          item.quantity > 0,
-      )
+          item.quantity > 0
+        );
+      })
       .map((item) => ({
         ...item,
         itemType: item.itemType ?? "product",
         description:
           typeof item.description === "string" ? item.description : "",
+        sizeLabel:
+          typeof item.sizeLabel === "string" ? item.sizeLabel : undefined,
       }));
   } catch {
     return [];
@@ -92,9 +109,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [isOpen]);
 
-  const addItem = useCallback((product: Product) => {
+  const addItem = useCallback((product: Product, variant: ProductVariant) => {
     setItems((current) => {
-      const key = cartItemKey({ itemType: "product", id: product.id });
+      const key = cartItemKey({
+        itemType: "product",
+        id: product.id,
+        variantId: variant.id,
+      });
       const existing = current.find((item) => cartItemKey(item) === key);
       if (existing) {
         return current.map((item) =>
@@ -108,9 +129,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         {
           itemType: "product",
           id: product.id,
+          variantId: variant.id,
           name: product.name,
           description: product.description,
-          price: product.price,
+          sizeLabel: variant.size_label,
+          price: variant.price,
           image_url: product.image_url,
           quantity: 1,
         },
@@ -146,28 +169,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const removeItem = useCallback((itemType: CartItemType, id: number) => {
-    const key = cartItemKey({ itemType, id });
-    setItems((current) => current.filter((item) => cartItemKey(item) !== key));
+  const removeItem = useCallback((item: CartLineRef) => {
+    const key = cartItemKey(item);
+    setItems((current) => current.filter((line) => cartItemKey(line) !== key));
   }, []);
 
-  const updateQuantity = useCallback(
-    (itemType: CartItemType, id: number, quantity: number) => {
-      const key = cartItemKey({ itemType, id });
-      if (quantity < 1) {
-        setItems((current) =>
-          current.filter((item) => cartItemKey(item) !== key),
-        );
-        return;
-      }
+  const updateQuantity = useCallback((item: CartLineRef, quantity: number) => {
+    const key = cartItemKey(item);
+    if (quantity < 1) {
       setItems((current) =>
-        current.map((item) =>
-          cartItemKey(item) === key ? { ...item, quantity } : item,
-        ),
+        current.filter((line) => cartItemKey(line) !== key),
       );
-    },
-    [],
-  );
+      return;
+    }
+    setItems((current) =>
+      current.map((line) =>
+        cartItemKey(line) === key ? { ...line, quantity } : line,
+      ),
+    );
+  }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
 
