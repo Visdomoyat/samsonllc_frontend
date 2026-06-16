@@ -15,7 +15,7 @@ export type CreateOrderPayload = {
   customer_email: string;
   shipping_address: ShippingAddress;
   items: Array<
-    | { product_id: number; quantity: number }
+    | { product_variant_id: number; quantity: number }
     | { stack_blend_id: number; quantity: number }
   >;
 };
@@ -23,7 +23,9 @@ export type CreateOrderPayload = {
 export type OrderItem = {
   id: number;
   product_id: number | null;
+  product_variant_id: number | null;
   product_name: string;
+  product_description: string | null;
   quantity: number;
   unit_price: string;
   line_total: string;

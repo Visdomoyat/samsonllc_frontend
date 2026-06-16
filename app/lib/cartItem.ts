@@ -1,7 +1,12 @@
 import type { CartItem } from "~/context/CartContext";
 import { calculateStackBlendTotal } from "~/lib/stackBlendPricing";
 
-export function cartItemKey(item: Pick<CartItem, "itemType" | "id">): string {
+export function cartItemKey(
+  item: Pick<CartItem, "itemType" | "id" | "variantId">,
+): string {
+  if (item.itemType === "product" && item.variantId != null) {
+    return `product:${item.id}:variant:${item.variantId}`;
+  }
   return `${item.itemType}:${item.id}`;
 }
 
